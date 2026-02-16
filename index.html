@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>لوكس بارفيوم | Lux Parfum</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"
+    />
+
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;600;900&display=swap");
+
+      :root {
+        --gold: #d4af37;
+        --dark: #0f172a;
+      }
+
+      body {
+        font-family: "Cairo", sans-serif;
+        background-color: var(--dark);
+        color: #e2e8f0;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .serif-font {
+        font-family: "Amiri", serif;
+      }
+
+      /* اهتزاز السلة */
+      @keyframes luxury-shake {
+        0%,
+        100% {
+          transform: rotate(0);
+        }
+        20% {
+          transform: rotate(8deg);
+        }
+        40% {
+          transform: rotate(-8deg);
+        }
+        60% {
+          transform: rotate(5deg);
+        }
+        80% {
+          transform: rotate(-5deg);
+        }
+      }
+      .shake-active {
+        animation: luxury-shake 0.6s ease-in-out;
+      }
+
+      /* ستايل السلايدر */
+      .swiper {
+        width: 100%;
+        height: 280px;
+        border-radius: 25px;
+        margin-top: 20px;
+      }
+      .swiper-slide img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .slide-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(15, 23, 42, 0.9), transparent);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 20px;
+      }
+
+      /* كرت المنتج */
+      .perfume-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(212, 175, 55, 0.1);
+        border-radius: 20px;
+        transition: 0.3s;
+      }
+
+      /* أزرار أكبر قليلاً */
+      .qty-btn {
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 1.2rem;
+        transition: 0.2s;
+      }
+      .qty-btn:active {
+        transform: scale(0.9);
+      }
+
+      .floating-basket {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        background: var(--gold);
+        color: black;
+        padding: 10px 18px;
+        border-radius: 50px;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 900;
+        box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
+      }
+
+      .side-panel {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        visibility: hidden;
+        transition: 0.4s;
+      }
+      .side-panel.active {
+        visibility: visible;
+      }
+      .panel-content {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 85vh;
+        background: #1e293b;
+        border-radius: 35px 35px 0 0;
+        transform: translateY(100%);
+        transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        padding: 25px;
+        display: flex;
+        flex-direction: column;
+      }
+      .side-panel.active .panel-content {
+        transform: translateY(0);
+      }
+
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+      }
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #334155;
+        transition: 0.4s;
+        border-radius: 24px;
+      }
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: 0.4s;
+        border-radius: 50%;
+      }
+      input:checked + .slider {
+        background-color: var(--gold);
+      }
+      input:checked + .slider:before {
+        transform: translateX(20px);
+      }
+
+      #toast {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--gold);
+        color: black;
+        padding: 10px 20px;
+        border-radius: 12px;
+        font-weight: bold;
+        display: none;
+        z-index: 500;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="toast"></div>
+
+    <div id="mainCartBtn" onclick="toggleCart(true)" class="floating-basket">
+      <i class="fas fa-shopping-bag"></i>
+      <span id="cartCount">0</span>
+    </div>
+
+    <header class="pt-20 px-6 text-center">
+      <h1 class="serif-font text-5xl text-yellow-500">LUX PARFUM</h1>
+      <p class="text-gray-400 text-[10px] tracking-[4px] uppercase mt-2">
+        The Art of Fragrance
+      </p>
+    </header>
+
+    <main class="pb-10">
+      <!-- السلايدر المتحرك تلقائياً بـ 3 صور -->
+      <div class="px-6">
+        <div class="swiper mySwiper">
+          <div class="swiper-wrapper">
+            <div class="swiper-slide relative">
+              <img
+                src="https://images.unsplash.com/photo-1594035910387-fea47794261f?w=800"
+              />
+              <div class="slide-overlay">
+                <h2 class="text-2xl font-black italic text-white">
+                  إصدارات خاصة
+                </h2>
+              </div>
+            </div>
+            <div class="swiper-slide relative">
+              <img
+                src="https://images.unsplash.com/photo-1541643600914-78b084683601?w=800"
+              />
+              <div class="slide-overlay">
+                <h2 class="text-2xl font-black italic text-white">
+                  عطور العود الملكي
+                </h2>
+              </div>
+            </div>
+            <div class="swiper-slide relative">
+              <img
+                src="https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=800"
+              />
+              <div class="slide-overlay">
+                <h2 class="text-2xl font-black italic text-white">
+                  تغليف هدايا فاخر
+                </h2>
+              </div>
+            </div>
+          </div>
+          <div class="swiper-pagination"></div>
+        </div>
+      </div>
+
+      <div class="px-6 mt-8">
+        <div
+          class="bg-white/5 rounded-2xl flex items-center px-4 py-4 border border-white/10"
+        >
+          <i class="fas fa-search text-gray-500 ml-3"></i>
+          <input
+            type="text"
+            id="searchInput"
+            oninput="renderPerfumes()"
+            placeholder="ابحث عن عطرك المفضل..."
+            class="bg-transparent border-none outline-none text-sm w-full font-bold text-white"
+          />
+        </div>
+      </div>
+
+      <div
+        id="perfumeGrid"
+        class="grid grid-cols-1 md:grid-cols-2 gap-4 px-6 mt-8"
+      ></div>
+
+      <div class="flex justify-center gap-6 mt-12 mb-10 opacity-60">
+        <a href="https://www.facebook.com/share/1NZGE4zUpV/" class="text-2xl"
+          ><i class="fab fa-facebook-f"></i
+        ></a>
+        <a
+          href="https://www.instagram.com/anas_ezzo?igsh=MWphZDY2eXQxdHNkeQ=="
+          class="text-2xl"
+          ><i class="fab fa-instagram"></i
+        ></a>
+        <a href="tiktok.com/@mega_store_67" class="text-2xl"
+          ><i class="fab fa-tiktok"></i
+        ></a>
+      </div>
+    </main>
+
+    <!-- واجهة السلة -->
+    <div id="cartPanel" class="side-panel">
+      <div
+        class="absolute inset-0 bg-black/80"
+        onclick="toggleCart(false)"
+      ></div>
+      <div class="panel-content">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="serif-font text-2xl text-yellow-500 font-bold">
+            مشترياتك
+          </h2>
+          <button onclick="toggleCart(false)" class="text-gray-400 text-2xl">
+            <i class="fas fa-times-circle"></i>
+          </button>
+        </div>
+
+        <div
+          id="cartListUI"
+          class="flex-1 overflow-y-auto space-y-3 pr-1"
+        ></div>
+
+        <div class="mt-4 border-t border-white/10 pt-4">
+          <div
+            class="bg-white/5 p-4 rounded-2xl border border-white/5 mb-4 flex justify-between items-center"
+          >
+            <div class="flex items-center gap-3">
+              <i class="fas fa-gift text-yellow-500 text-lg"></i>
+              <span class="text-sm font-bold text-white"
+                >تغليف كهدية؟ (+5$)</span
+              >
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="giftToggle" onchange="syncCart()" />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <textarea
+            id="orderNotes"
+            placeholder="أضف ملاحظاتك هنا..."
+            class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-gray-300 outline-none h-16 resize-none mb-4 focus:border-yellow-500/30"
+          ></textarea>
+
+          <div class="flex justify-between items-center mb-6">
+            <div>
+              <p class="text-[10px] text-gray-500 uppercase">المجموع</p>
+              <p id="totalPrice" class="text-3xl font-black text-white">
+                0.00 $
+              </p>
+            </div>
+            <div
+              id="discountNote"
+              class="hidden text-green-400 text-[10px] font-bold"
+            >
+              خصم 10% مطبق ✅
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <button
+              onclick="locateMe()"
+              class="py-4 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-white"
+            >
+              <i class="fas fa-location-dot text-yellow-500 mr-2"></i> موقعي
+            </button>
+            <button
+              onclick="sendOrder()"
+              class="py-4 rounded-xl bg-yellow-500 text-black font-black text-sm"
+            >
+              إرسال الطلب
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script>
+      const perfumes = [
+        {
+          id: 1,
+          name: "عنبر ليجاسي",
+          price: 45.0,
+          img: "https://th.bing.com/th?id=OIF.yKlOQ7H0tW8uAkt2Uqg%2f%2fQ&w=302&h=180&c=7&r=0&o=7&pid=1.7&rm=3",
+          desc: "عود وعنبر فاخر",
+        },
+        {
+          id: 2,
+          name: "روز دي بايروت",
+          price: 38.0,
+          img: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400",
+          desc: "ياسمين وورد دمشقي",
+        },
+        {
+          id: 3,
+          name: "بلو ويف",
+          price: 32.0,
+          img: "https://images.unsplash.com/photo-1557170334-a9632e77c6e4?w=400",
+          desc: "أخشاب بيضاء منعشة",
+        },
+        {
+          id: 4,
+          name: "مسك الحرير",
+          price: 29.0,
+          img: "data:image/webp;base64,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",
+          desc: "نعومة المسك الصافي",
+        },
+      ];
+
+      let cart = [];
+      let locationURL = "";
+
+      window.onload = () => {
+        renderPerfumes();
+        new Swiper(".mySwiper", {
+          loop: true,
+          effect: "fade",
+          autoplay: { delay: 3000 },
+          pagination: { el: ".swiper-pagination", clickable: true },
+        });
+      };
+
+      function renderPerfumes() {
+        const term = document.getElementById("searchInput").value.toLowerCase();
+        const grid = document.getElementById("perfumeGrid");
+        const filtered = perfumes.filter((p) =>
+          p.name.toLowerCase().includes(term),
+        );
+
+        grid.innerHTML = filtered
+          .map((p) => {
+            const inCart = cart.find((x) => x.id === p.id);
+            const q = inCart ? inCart.qty : 0;
+            return `
+                    <div class="perfume-card p-4 flex gap-4 items-center">
+                        <img src="${p.img}" class="w-20 h-20 rounded-xl object-cover">
+                        <div class="flex-1">
+                            <h3 class="font-bold text-sm text-white">${p.name}</h3>
+                            <p class="text-yellow-500 font-black text-sm">${p.price.toFixed(2)} $</p>
+                            <div class="flex items-center gap-4 mt-2">
+                                <button onclick="updateCart(${p.id}, -1)" class="qty-btn bg-red-500/10 text-red-500">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <span class="font-black text-sm w-4 text-center">${q}</span>
+                                <button onclick="updateCart(${p.id}, 1)" class="qty-btn bg-green-500/10 text-green-500">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+          })
+          .join("");
+      }
+
+      function updateCart(id, change) {
+        const idx = cart.findIndex((x) => x.id === id);
+        if (idx > -1) {
+          cart[idx].qty += change;
+          if (cart[idx].qty <= 0) cart.splice(idx, 1);
+        } else if (change > 0) {
+          const p = perfumes.find((x) => x.id === id);
+          cart.push({ ...p, qty: 1 });
+        }
+        if (change > 0) animateBasket();
+        syncCart();
+      }
+
+      function animateBasket() {
+        const b = document.getElementById("mainCartBtn");
+        b.classList.remove("shake-active");
+        void b.offsetWidth;
+        b.classList.add("shake-active");
+      }
+
+      function syncCart() {
+        const isGift = document.getElementById("giftToggle").checked;
+        const totalQty = cart.reduce((a, b) => a + b.qty, 0);
+        let totalVal = cart.reduce((a, b) => a + b.price * b.qty, 0);
+        if (isGift && cart.length > 0) totalVal += 5;
+        if (totalVal >= 150) {
+          totalVal *= 0.9;
+          document.getElementById("discountNote").classList.remove("hidden");
+        } else {
+          document.getElementById("discountNote").classList.add("hidden");
+        }
+        document.getElementById("cartCount").innerText = totalQty;
+        document.getElementById("totalPrice").innerText =
+          totalVal.toFixed(2) + " $";
+        renderPerfumes();
+        if (document.getElementById("cartPanel").classList.contains("active"))
+          renderCartList();
+      }
+
+      function toggleCart(status) {
+        document.getElementById("cartPanel").classList.toggle("active", status);
+        if (status) renderCartList();
+      }
+
+      function renderCartList() {
+        const container = document.getElementById("cartListUI");
+        if (cart.length === 0) {
+          container.innerHTML = `<p class="text-center py-10 text-gray-500">الحقيبة فارغة</p>`;
+          return;
+        }
+        container.innerHTML = cart
+          .map(
+            (i) => `
+                <div class="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
+                    <img src="${i.img}" class="w-12 h-12 rounded-lg object-cover">
+                    <div class="flex-1">
+                        <p class="font-bold text-xs text-white">${i.name}</p>
+                        <p class="text-yellow-500 text-[10px]">${(i.price * i.qty).toFixed(2)} $</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="updateCart(${i.id}, -1)" class="text-red-500"><i class="fas fa-minus-circle"></i></button>
+                        <span class="font-bold text-xs">${i.qty}</span>
+                        <button onclick="updateCart(${i.id}, 1)" class="text-green-500"><i class="fas fa-plus-circle"></i></button>
+                    </div>
+                </div>
+            `,
+          )
+          .join("");
+      }
+
+      function locateMe() {
+        if (!navigator.geolocation) return notify("غير مدعوم");
+        notify("جاري التحديد...");
+        navigator.geolocation.getCurrentPosition(
+          (p) => {
+            locationURL = `https://www.google.com/maps?q=${p.coords.latitude},${p.coords.longitude}`;
+            notify("تم تحديد موقعك بنجاح ✅");
+          },
+          () => notify("فشل التحديد"),
+        );
+      }
+
+      function notify(msg) {
+        const t = document.getElementById("toast");
+        t.innerText = msg;
+        t.style.display = "block";
+        setTimeout(() => (t.style.display = "none"), 3000);
+      }
+
+      function sendOrder() {
+        if (cart.length === 0) return notify("أضف عطراً أولاً");
+        const isGift = document.getElementById("giftToggle").checked;
+        let msg = `📦 *طلب جديد من لوكس بارفيوم*\n\n`;
+        cart.forEach((i) => (msg += `• ${i.name} (${i.qty})\n`));
+        if (isGift) msg += `\n🎁 *الطلب كهدية مع تغليف*`;
+        msg += `\n\n💰 *المجموع: ${document.getElementById("totalPrice").innerText}*`;
+        const notes = document.getElementById("orderNotes").value;
+        if (notes) msg += `\n📝 *ملاحظة:* ${notes}`;
+        if (locationURL) msg += `\n📍 *الموقع:* ${locationURL}`;
+        window.location.href = `https://api.whatsapp.com/send?phone=96176648215&text=${encodeURIComponent(msg)}`;
+      }
+    </script>
+  </body>
+</html>
